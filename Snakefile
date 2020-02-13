@@ -30,6 +30,7 @@ rule test_script:
         expand("resources/heat_demand_urban_elec_s_{clusters}.nc",
                  **config['scenario'])
 
+
 rule prepare_sector_networks:
     input:
         expand(config['results_dir'] + config['run'] + "/prenetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
@@ -120,11 +121,15 @@ rule build_solar_thermal_profiles:
 
 rule build_energy_totals:
     input:
-        nuts3_shapes=pypsaeur('resources/nuts3_shapes.geojson')
+        nuts3_shapes=pypsaeur('resources/nuts3_shapes.geojson'),
+	    district_heat_share='data/district_heat_share.csv',
+        idee_dir='data/jrc-idees-2015',
+        eea_co2="data/eea/UNFCCC_v21.csv",
+        swiss="data/switzerland-sfoe/switzerland-new_format.csv"
     output:
         energy_name='data/energy_totals.csv',
-	co2_name='data/co2_totals.csv',
-	transport_name='data/transport_data.csv'
+    	co2_name='data/co2_totals.csv',
+    	transport_name='data/transport_data.csv'
     threads: 1
     resources: mem_mb=10000
     script: 'scripts/build_energy_totals.py'
@@ -168,6 +173,20 @@ rule build_industrial_demand:
     script: 'scripts/build_industrial_demand.py'
 
 
+if config['sector'].get('retrofitting', True):
+    rule build_retro_cost_curves:
+        input:
+            building_stock="data/retro/data_building_stock.csv",
+            tax_w="data/retro/electricity_taxes_eu.csv",
+            construction_index="data/retro/comparative_level_investment.csv",
+            average_surface="data/retro/average_surface_components.csv",
+            floor_area_missing="data/retro/floor_area_missing.csv",
+            clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
+            cost_germany="data/retro/retro_cost_germany.csv"
+        output:
+            retro_cost="resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
+            floor_area="resources/floor_area_{network}_s{simpl}_{clusters}.csv"
+        script: "scripts/build_retro_cost_curves.py"
 
 
 rule prepare_sector_network:
@@ -180,8 +199,8 @@ rule prepare_sector_network:
         timezone_mappings='data/timezone_mappings.csv',
         heat_profile="data/heat_load_profile_BDEW.csv",
         costs="data/costs.csv",
-	retro_cost_energy = "data/retro",  
-	retro_tax_w = "data/eu_elec_taxes_weighting.csv",
+	retro_cost_energy = "resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
+        floor_area = "resources/floor_area_{network}_s{simpl}_{clusters}.csv",
         clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
 	traffic_data = "data/emobility/",
         industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
