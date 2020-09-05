@@ -2,15 +2,15 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 'retro'
+run: 'baseload'
 
 scenario:
   sectors: [E]  # ignore this legacy setting
   simpl: ['']  # only relevant for PyPSA-Eur
-  lv: [1.0, 1.125, 1.25, 1.5, 1.75, 2.0, "opt"]    # allowed transmission line volume expansion, can be any float >= 1.0 (today) or "opt"
+  lv: [1.0, "opt"]    # allowed transmission line volume expansion, can be any float >= 1.0 (today) or "opt"
   clusters: [48] # number of nodes in Europe, any integer between 37 (1 node per country-zone) and several hundred
   opts: ['']  # only relevant for PyPSA-Eur
-  sector_opts: [Co2L0-120H-T-H-B-retro-tes, Co2L0-120H-T-H-B-noigas]  # this is where the main scenario settings are
+  sector_opts: [Co2L0-1H-T-H-B-noigas-baseload, Co2L0-1H-T-H-B-retro-tes-baseload, Co2L0-1H-T-H-B-noigas]  # this is where the main scenario settings are
   # to really understand the options here, look in scripts/prepare_sector_network.py
   # Co2Lx specifies the CO2 target in x% of the 1990 values; default will give default (5%);
   # Co2L0p25 will give 25% CO2 emissions; Co2Lm0p05 will give 5% negative emissions
@@ -65,19 +65,18 @@ sector:
   'shipping_average_efficiency' : 0.4 #For conversion of fuel oil to propulsion in 2011
   'time_dep_hp_cop' : True
   'space_heating_fraction' : 1.0 #fraction of space heating active
-  'base_load' : False
+  'baseload' : False
   'retrofitting' : False
-  'retro_cost_factor': 1.0
   #'retrofitting-cost_factor' : 1.0
   'retrofitting_exogenous' : False # assuming an annual natural retro-rate
   'years' : 30  # number of years from today to year of optimisation
-  'retro_rate' : 0.02  # rate of yearly renovation
-  'dE' : 0.6   # assumed energy reduction for a renovated building
+  'retro_rate' : 0.03  # rate of yearly renovation
+  'dE' : 0.4   # assumed energy reduction for a renovated building
   'retro_opt' : "once"   # cycle of retrofitting ["once", "all", "retro_steps", "EU-target"] [("once"-> buildings are renovated one time)
   'tes' : False
   'tes_tau' : 3.
   'boilers' : True
-  'noigas': False # if true gas boilers in rural/decentral areas are removed
+  'noigas': False  # if true gas boilers in rural/decentral areas are removed
   'oil_boilers': False
   'chp' : True
   'chp_parameters':
@@ -88,16 +87,16 @@ sector:
   'solar_thermal' : True
   'solar_cf_correction': 0.788457  # =  >>> 1/1.2683
   'marginal_cost_storage' : 0. #1e-4
-  'methanation' : True
-  'helmeth' : True
+  'methanation' : False
+  'helmeth' : False
   'dac' : True
-  'fossil_gas': False
-  'h2_import': False
+  'fossil_gas': False   # allow import of methan
+  'h2_import': False    # allow import of H2
   'costs_old' : False
   'h2_costs_old': False
   'co2_vent' : True
   'SMR' : True
-  'ccs' : False
+  'ccs' : True
   'ccs_fraction' : 0.9
   'hydrogen_underground_storage' : True
   'use_fischer_tropsch_waste_heat' : True
@@ -185,9 +184,9 @@ plotting:
   costs_threshold: 1
 
 
-  energy_max: 20000.
-  energy_min: -15000.
-  energy_threshold: 50.
+  energy_max: 3600.
+  energy_min: -1200.
+  energy_threshold: 1.
 
 
   vre_techs: ["onwind", "offwind-ac", "offwind-dc", "solar", "ror"]
@@ -301,9 +300,9 @@ plotting:
     "district heating" : "#CC4E5C"
     "retrofitting" : "purple"
     "building retrofitting" : "purple"
-    "BEV charger" : "grey"
-    "V2G" : "grey"
-    "transport" : "grey"
+    "BEV charger" : "lightgray"
+    "V2G" : "darkgray"
+    "transport" : "dimgray"
     "electricity" : "k"
     "gas for industry" : "#333333"
     "solid biomass for industry" : "#555555"
@@ -330,6 +329,8 @@ plotting:
     'electricity distribution grid': "tomato"
     "gas pipeline": "darkgoldenrod"
     "solar rooftop": "gold"
+    "gas Store charger": "maroon"
+    "gas Store discharger": "sienna"
   nice_names:
     # OCGT: "Gas"
     # OCGT marginal: "Gas (marginal)"
