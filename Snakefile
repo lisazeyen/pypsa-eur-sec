@@ -39,7 +39,8 @@ rule prepare_sector_networks:
 
 rule build_population_layouts:
     input:
-        nuts3_shapes=pypsaeur('resources/nuts3_shapes.geojson'),
+        # nuts3_shapes=pypsaeur('resources/nuts3_shapes.geojson'),
+        nuts3_shapes='../pypsa-eur/resources/nuts3_shapes.geojson',
         urban_percent="data/urban_percent.csv"
     output:
         pop_layout_total="resources/pop_layout_total.nc",
@@ -53,7 +54,8 @@ rule build_clustered_population_layouts:
         pop_layout_total="resources/pop_layout_total.nc",
         pop_layout_urban="resources/pop_layout_urban.nc",
         pop_layout_rural="resources/pop_layout_rural.nc",
-        regions_onshore=pypsaeur('resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson')
+ 	regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
+        #  regions_onshore=pypsaeur('resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson')
     output:
         clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv"
     script: "scripts/build_clustered_population_layouts.py"
@@ -64,7 +66,8 @@ rule build_heat_demands:
         pop_layout_total="resources/pop_layout_total.nc",
         pop_layout_urban="resources/pop_layout_urban.nc",
         pop_layout_rural="resources/pop_layout_rural.nc",
-        regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+ 	regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
+        #  regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
     output:
         heat_demand_urban="resources/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
         heat_demand_rural="resources/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
@@ -76,7 +79,8 @@ rule build_temperature_profiles:
         pop_layout_total="resources/pop_layout_total.nc",
         pop_layout_urban="resources/pop_layout_urban.nc",
         pop_layout_rural="resources/pop_layout_rural.nc",
-        regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+ 	regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
+        #   regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
     output:
         temp_soil_total="resources/temp_soil_total_{network}_s{simpl}_{clusters}.nc",
         temp_soil_rural="resources/temp_soil_rural_{network}_s{simpl}_{clusters}.nc",
@@ -110,7 +114,8 @@ rule build_solar_thermal_profiles:
         pop_layout_total="resources/pop_layout_total.nc",
         pop_layout_urban="resources/pop_layout_urban.nc",
         pop_layout_rural="resources/pop_layout_rural.nc",
-        regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+ 	regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
+        #   regions_onshore=pypsaeur("resources/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
     output:
         solar_thermal_total="resources/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_urban="resources/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
@@ -174,35 +179,41 @@ rule build_industrial_demand:
 
 
 if config['sector'].get('retrofitting', True):
-    rule build_retro_cost_curves:
-        input:
-            building_stock="data/retro/data_building_stock.csv",
-            tax_w="data/retro/electricity_taxes_eu.csv",
-            construction_index="data/retro/comparative_level_investment.csv",
-            average_surface="data/retro/average_surface_components.csv",
-            floor_area_missing="data/retro/floor_area_missing.csv",
-            clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
-            cost_germany="data/retro/retro_cost_germany.csv"
-        output:
-            retro_cost="resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
-            floor_area="resources/floor_area_{network}_s{simpl}_{clusters}.csv"
-        script: "scripts/build_retro_cost_curves.py"
+	rule build_retro_cost_curves:
+	    input:
+    		building_stock="data/retro/data_building_stock.csv",
+    		u_values_PL="data/retro/u_values_poland.csv",
+    		tax_w="data/retro/electricity_taxes_eu.csv",
+    		construction_index="data/retro/comparative_level_investment.csv",
+    		average_surface="data/retro/average_surface_components.csv",
+    		floor_area_missing="data/retro/floor_area_missing.csv",
+    		clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
+    		cost_germany="data/retro/retro_cost_germany.csv",
+    		window_assumptions="data/retro/window_assumptions.csv"
+	    output:
+    		retro_cost="resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
+    		floor_area="resources/floor_area_{network}_s{simpl}_{clusters}.csv"
+	    script: "scripts/build_retro_cost_curves.py"
 
 
 rule prepare_sector_network:
     input:
-        network=pypsaeur('networks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),
         energy_totals_name='data/energy_totals.csv',
         co2_totals_name='data/co2_totals.csv',
         transport_name='data/transport_data.csv',
-        biomass_potentials='data/biomass_potentials.csv',
+        biomass_potentials='data/biomass/biomass_potentials.csv',
+        biomass_transport='data/biomass/biomass_transport_costs.csv',
         timezone_mappings='data/timezone_mappings.csv',
         heat_profile="data/heat_load_profile_BDEW.csv",
-        costs="data/costs.csv",
+        costs="data/costs/",
+        network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
+        #   network=pypsaeur('networks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),
+	costs_old="data/costs_old.csv",
 	retro_cost_energy = "resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
         floor_area = "resources/floor_area_{network}_s{simpl}_{clusters}.csv",
         clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
 	traffic_data = "data/emobility/",
+	h2_cavern = "data/hydrogen_salt_cavern_potentials.csv",
         industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
         heat_demand_urban="resources/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
         heat_demand_rural="resources/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
@@ -222,7 +233,9 @@ rule prepare_sector_network:
         solar_thermal_total="resources/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_urban="resources/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_rural="resources/solar_thermal_rural_{network}_s{simpl}_{clusters}.nc"
-    output: config['results_dir']  +  config['run'] + '/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc'
+    output:
+        network = config['results_dir']  +  config['run'] + '/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc' #,
+	# costs = config['results_dir']  +  config['run'] + '/costs/assumed_costs_{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.csv'
     threads: 1
     resources: mem=1000
     benchmark: "benchmarks/prepare_network/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
@@ -241,7 +254,7 @@ rule solve_network:
         memory="logs/" + config['run'] + "/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_memory.log"
     benchmark: "benchmarks/solve_network/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
     threads: 4
-    resources: mem=50000 #memory in MB; 40 GB enough for 45+B+I; 100 GB based on RESI usage for 128
+    resources: mem=100000 #memory in MB; 40 GB enough for 45+B+I; 100 GB based on RESI usage for 128
     # group: "solve" # with group, threads is ignored https://bitbucket.org/snakemake/snakemake/issues/971/group-job-description-does-not-contain
     script: "scripts/solve_network.py"
 

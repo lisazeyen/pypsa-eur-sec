@@ -2,44 +2,42 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 'real_district_share'
+run: 'retro'
 
 scenario:
-  sectors: [E] # ,E+EV,E+BEV,E+BEV+V2G] # [ E+EV, E+BEV, E+BEV+V2G ]
-  simpl: ['']
-  lv: [1.0]   #, 1.125, 1.25, 1.5, 2.0]# or opt
-  clusters: [38] #[90, 128, 181] #[45, 64, 90, 128, 181, 256] #, 362] # (2**np.r_[5.5:9:.5]).astype(int) minimum is 37
-  opts: ['']  #for pypsa-eur
-  sector_opts: [Co2L0-3H-T-H-B] #,Co2L0p1-3H-T-H-B-I,Co2L0p25-3H-T-H-B-I,Co2L0p5-3H-T-H-B-I]#[Co2L0-3H-T-H-B-I-onwind0-solar3,Co2L0-3H-T-H-B-I-onwind0p125-solar3,Co2L0-3H-T-H-B-I-onwind0p25-solar3,Co2L0-3H-T-H-B-I-onwind0p50-solar3,Co2L0-3H-T-H-B-I-solar3]#,Co2L0-3H-T-H-B-I-onwind0p25-solar3]#,Co2L0p05-3H-T-H-B-I,Co2L0p10-3H-T-H-B-I,Co2L0p20-3H-T-H-B-I,Co2L0p30-3H-T-H-B-I,Co2L0p50-3H-T-H-B-I]#[Co2L-3H-T-H,Co2L0p10-3H-T-H,Co2L0-3H-T-H,Co2L0p20-3H-T-H]   #Co2L-3H-T-H,Co2L0p10-3H-T-H,Co2L0p20-3H-T-HCo2L-3H-T-H,Co2L0p10-3H-T-H,Co2L0p30-3H-T-H,Co2L0p50-3H-T-H] #Co2L-3H,Co2L-3H-T,, LC-FL, LC-T, Ep-T, Co2L-T]
-  # Co2L will give default (5%); Co2L0p25 will give 25% CO2 emissions; Co2Lm0p05 will give 5% negative emissions
+  sectors: [E]  # ignore this legacy setting
+  simpl: ['']  # only relevant for PyPSA-Eur
+  lv: [1.0, 1.125, 1.25, 1.5, 1.75, 2.0, "opt"]    # allowed transmission line volume expansion, can be any float >= 1.0 (today) or "opt"
+  clusters: [48] # number of nodes in Europe, any integer between 37 (1 node per country-zone) and several hundred
+  opts: ['']  # only relevant for PyPSA-Eur
+  sector_opts: [Co2L0-120H-T-H-B-retro-tes, Co2L0-120H-T-H-B-noigas]  # this is where the main scenario settings are
+  # to really understand the options here, look in scripts/prepare_sector_network.py
+  # Co2Lx specifies the CO2 target in x% of the 1990 values; default will give default (5%);
+  # Co2L0p25 will give 25% CO2 emissions; Co2Lm0p05 will give 5% negative emissions
+  # xH is the temporal resolution; 3H is 3-hourly, i.e. one snapshot every 3 hours
+  # single letters are sectors: T for land transport, H for building heating,
+  # B for biomass supply, I for industry, shipping and aviation
+  # solarx or onwindx changes the available installable potential by factor x
+  # dist{n} includes distribution grids with investment cost of n times cost in data/costs.csv
 
 
+# snapshots are originally set in PyPSA-Eur/config.yaml but used again by PyPSA-Eur-Sec
 snapshots:
   # arguments to pd.date_range
   start: "2013-01-01"
   end: "2014-01-01"
   closed: 'left' # end is not inclusive
 
+atlite:
+  cutout_dir: '../pypsa-eur/cutouts'
+  cutout_name: "europe-2013-era5"
 
+# this information is NOT used but needed as an argument for
+# pypsa-eur/scripts/add_electricity.py/load_costs in make_summary.py
 electricity:
-  voltages: [220., 300., 380.]
-
-  extendable_carriers:
-    Generator: [] # [OCGT]
-    StorageUnit: [] # [battery, H2, CAES]
-
   max_hours:
     battery: 6
     H2: 168
-
-  conventional_carriers: [] # nuclear, oil, OCGT, CCGT, coal, lignite, geothermal, biomass]
-
-atlite:
-  cutout_dir: '../pypsa-eur/cutouts'
-
-renewable:
-  onwind:
-    cutout: europe-2013-era5
 
 biomass:
   year: 2030
@@ -50,6 +48,7 @@ sector:
   'central' : True    # assume a fraction ('central_fraction') of central heating in urban area
   'central_fraction' : 0.6
   'central_real' : True   # take current share fo central heating
+  'dh_strength' : 0.0
   'dsm_restriction_value' : 0.75  #Set to 0 for no restriction on BEV DSM
   'dsm_restriction_time' : 7  #Time at which SOC of BEV has to be dsm_restriction_value
   'transport_heating_deadband_upper' : 20.
@@ -64,31 +63,50 @@ sector:
   'v2g' : True #allows feed-in to grid from EV battery
   'transport_fuel_cell_share' : 0.   #0 means all EVs, 1 means all FCs
   'shipping_average_efficiency' : 0.4 #For conversion of fuel oil to propulsion in 2011
-  'time_dep_hp_cop' : False
+  'time_dep_hp_cop' : True
   'space_heating_fraction' : 1.0 #fraction of space heating active
-  'retrofitting' : True
+  'base_load' : False
+  'retrofitting' : False
+  'retro_cost_factor': 1.0
   #'retrofitting-cost_factor' : 1.0
   'retrofitting_exogenous' : False # assuming an annual natural retro-rate
   'years' : 30  # number of years from today to year of optimisation
-  'retro_rate' : 0.03  # rate of yearly renovation
-  'dE' : 0.4   # assumed energy reduction for a renovated building
-  'retro_opt' : "once"   # clycle of retrofitting
-  'tes' : True
+  'retro_rate' : 0.02  # rate of yearly renovation
+  'dE' : 0.6   # assumed energy reduction for a renovated building
+  'retro_opt' : "once"   # cycle of retrofitting ["once", "all", "retro_steps", "EU-target"] [("once"-> buildings are renovated one time)
+  'tes' : False
   'tes_tau' : 3.
   'boilers' : True
+  'noigas': False # if true gas boilers in rural/decentral areas are removed
+  'oil_boilers': False
   'chp' : True
+  'chp_parameters':
+    'eta_elec' : 0.468 #electrical efficiency with no heat output
+    'c_v' : 0.15 #loss of fuel for each addition of heat
+    'c_b' : 0.75 #backpressure ratio
+    'p_nom_ratio' : 1.0
   'solar_thermal' : True
   'solar_cf_correction': 0.788457  # =  >>> 1/1.2683
   'marginal_cost_storage' : 0. #1e-4
   'methanation' : True
   'helmeth' : True
   'dac' : True
+  'fossil_gas': False
+  'h2_import': False
+  'costs_old' : False
+  'h2_costs_old': False
   'co2_vent' : True
   'SMR' : True
+  'ccs' : False
   'ccs_fraction' : 0.9
   'hydrogen_underground_storage' : True
   'use_fischer_tropsch_waste_heat' : True
   'use_fuel_cell_waste_heat' : True
+  'electricity_distribution_grid' : True
+  'electricity_distribution_grid_cost_factor' : 1.0  #multiplies cost in data/costs.csv
+  'electricity_grid_connection' : True  # only applies to onshore wind and utility PV
+  'gas_distribution_grid' : True
+  'gas_distribution_grid_cost_factor' : 1.0  #multiplies cost in data/costs.csv
 
 costs:
   year: 2030
@@ -145,6 +163,7 @@ solving:
     #solutiontype: 2 # non basic solution, ie no crossover
     #barrier_convergetol: 1.e-5
     #feasopt_tolerance: 1.e-6
+  mem: 20000 #memory in MB; 20 GB enough for 50+B+I+H2; 100 GB for 181+B+I+H2
 
 industry:
   'DRI_ratio' : 0.5 #ratio of today's blast-furnace steel (60% primary route, 40% secondary) to future assumption (30% primary, 70% secondary), transformed into DRI + electric arc
@@ -192,7 +211,9 @@ plotting:
     'offshore wind (AC)' : "c"
     'offwind-dc' : "#009999"
     'offshore wind (DC)' : "#009999"
+    'wave' : "#004444"
     "hydro" : "#3B5323"
+    'hydro+PHS': "#3B5323"
     "hydro reservoir" : "#3B5323"
     "ror" : "#78AB46"
     "run of river" : "#78AB46"
@@ -200,6 +221,7 @@ plotting:
     'solar' : "y"
     'solar PV' : "y"
     'solar thermal' : 'coral'
+    'solar rooftop' : '#e6b800'
     "OCGT" : "wheat"
     "OCGT marginal" : "sandybrown"
     "OCGT-heat" : "orange"
@@ -211,12 +233,15 @@ plotting:
     "natural gas" : "brown"
     "SMR" : "#4F4F2F"
     "oil" : "#B5A642"
+    "oil boiler" : "#B5A677"
     "lines" : "k"
     "transmission lines" : "k"
     "H2" : "m"
     "hydrogen storage" : "m"
     "battery" : "slategray"
-    "battery storage" : "coral"
+    "battery storage" : "slategray"
+    "home battery" : "#614700"
+    "home battery storage" : "#614700"
     "Nuclear" : "r"
     "Nuclear marginal" : "r"
     "Coal" : "k"
@@ -248,9 +273,10 @@ plotting:
     "gas for industry co2 to atmosphere": "#654321"
     "gas for industry co2 to stored": "#654321"
     "Fischer-Tropsch" : "#44DD33"
-    "kerosene for aviation": "#44DD33"
-    "naphtha for industry" : "#44DD33"
+    "kerosene for aviation": "#44BB11"
+    "naphtha for industry" : "#44FF55"
     "nuclear" : "#303030"
+    "wood boiler": "teal"
     "water tanks" : "#BBBBBB"
     "hot water storage" : "#BBBBBB"
     "hot water charging" : "#BBBBBB"
@@ -281,6 +307,7 @@ plotting:
     "electricity" : "k"
     "gas for industry" : "#333333"
     "solid biomass for industry" : "#555555"
+    "solid biomass transport" : "green"
     "industry new electricity" : "#222222"
     "process emissions to stored" : "#444444"
     "process emissions to atmosphere" : "#888888"
@@ -300,6 +327,9 @@ plotting:
     "services rural water tanks" : "#222222"
     "services urban decentral water tanks" : "#222222"
     "urban central water tanks" : "#222222"
+    'electricity distribution grid': "tomato"
+    "gas pipeline": "darkgoldenrod"
+    "solar rooftop": "gold"
   nice_names:
     # OCGT: "Gas"
     # OCGT marginal: "Gas (marginal)"
