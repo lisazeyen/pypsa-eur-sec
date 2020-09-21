@@ -217,10 +217,9 @@ def insert_gas_distribution_costs(network):
     print("Inserting gas distribution grid with investment cost\
           factor of", f_costs)
 
-    nodes = network.buses[network.buses.carrier=="gas"].index
-
     # gas boilers
-    gas_b = network.links.index[network.links.carrier.str.contains("boiler")]
+    gas_b = network.links[network.links.carrier.str.contains("gas boiler") &
+                          (~network.links.carrier.str.contains("urban central"))].index
     network.links.loc[gas_b, "capital_cost"] += costs.loc['electricity distribution grid']["fixed"]
     # micro CHPs
     mchp = network.links.index[network.links.carrier.str.contains("micro gas")]
@@ -1667,7 +1666,7 @@ def add_heat(network):
                                 p_max_pu=space_pu_c,
                                 p_min_pu=space_pu_c,
                                 country=ct,
-                                capital_cost=capital_cost[strength])
+                                capital_cost=capital_cost[strength] * options['retrofitting-cost_factor'])
 
             else:
                 print("no retrofitting data for ", ct,
@@ -2150,17 +2149,17 @@ if __name__ == "__main__":
     #  Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from vresutils.snakemake import MockSnakemake
-        os.chdir("/home/ws/bw0928/Dokumente/pypsa-eur-sec/scripts")
+        os.chdir("/home/ws/bw0928/mnt/lisa/pypsa-eur-sec-copy/scripts")
         snakemake = MockSnakemake(
             wildcards=dict(
                 network='elec',
                 simpl='',
                 clusters='48',
-                lv='2',
+                lv='1',
                 opts='Co2L-3H',
-                sector_opts="[Co2L0p0-3h-T-H-B-I-retro-noigas-tes]"),
+                sector_opts="[Co2L0p0-3h-T-H-B-I-retro-noigas-tes-dhshare80]"),
             input=dict(
-                network='../pypsa-eur/networks/{network}_s{simpl}_{clusters}.nc',
+                network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}.nc',
                 energy_totals_name='data/energy_totals.csv',
                 co2_totals_name='data/co2_totals.csv',
                 transport_name='data/transport_data.csv',
@@ -2200,7 +2199,7 @@ if __name__ == "__main__":
                 costs='/costs/assumed_costs_{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.csv'
             )
         )
-        with open('/home/ws/bw0928/Dokumente/pypsa-eur-sec/config.yaml', encoding='utf8') as f:
+        with open('/home/ws/bw0928/mnt/lisa/pypsa-eur-sec/config.yaml', encoding='utf8') as f:
             snakemake.config = yaml.safe_load(f)
 
     logging.basicConfig(level=snakemake.config['logging_level'])
@@ -2258,8 +2257,20 @@ if __name__ == "__main__":
                 wave_cost_factor)
             add_wave(n, wave_cost_factor)
         if o[:5] == "retro":
-            print("Including building retrofitting")
             options["retrofitting"] = True
+            options["retrofitting-cost_factor"] = 1.0
+            print("including building retrofitting")
+            if len(o)>5:
+                retro_factor = float(o[6::])/100
+                if o[5] == "m":
+                    retro_factor *= -1
+                retro_factor = 1 + retro_factor
+                options["retrofitting-cost_factor"] = retro_factor
+            print("Including building retrofitting with cost factor ", options["retrofitting-cost_factor"])
+        if o[:7] =="dhshare":
+            options["central_real"] = True
+            options["dh_strength"] = float(o[7:9])/100
+            print("add district heating increase of ", options["dh_strength"])
         if o[:3] == "tes":
             print("Including thermal energy storage")
             options["tes"] = True
