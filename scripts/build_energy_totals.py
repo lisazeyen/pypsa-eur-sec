@@ -696,7 +696,7 @@ if __name__ == "__main__":
     nuts3 = gpd.read_file(snakemake.input.nuts3_shapes).set_index('index')
     population = nuts3['pop'].groupby(nuts3.country).sum()
 
-    year = 2013
+    year = snakemake.wildcards.year
 
     eurostat = build_eurostat(year)
 

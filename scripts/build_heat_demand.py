@@ -15,6 +15,12 @@ if 'snakemake' not in globals():
     snakemake.input = Dict()
     snakemake.output = Dict()
 
+# adjust snapshots to energy year
+snakemake.config["snapshots"] = {'start': '{}-01-01'.format(snakemake.wildcards["year"]),
+                                 'end': '{}-01-01'.format(str(int(snakemake.wildcards["year"])+1)),
+                                 'closed': 'left'}
+snakemake.config['atlite']['cutout_name'] = 'europe-{}'.format(snakemake.wildcards.year)
+
 time = pd.date_range(freq='m', **snakemake.config['snapshots'])
 params = dict(years=slice(*time.year[[0, -1]]),
               months=slice(*time.month[[0, -1]]))

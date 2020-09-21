@@ -21,6 +21,12 @@ if 'snakemake' not in globals():
 
     snakemake.input["urban_percent"] = "data/urban_percent.csv"
 
+# adjust snapshots to energy year
+snakemake.config["snapshots"] = {'start': '{}-01-01'.format(snakemake.wildcards["year"]),
+                                 'end': '{}-01-01'.format(str(int(snakemake.wildcards["year"])+1)),
+                                 'closed': 'left'}
+snakemake.config['atlite']['cutout_name'] = 'europe-{}'.format(snakemake.wildcards.year)
+
 cutout = atlite.Cutout(snakemake.config['atlite']['cutout_name'],
                        cutout_dir=snakemake.config['atlite']['cutout_dir'])
 
