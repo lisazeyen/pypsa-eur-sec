@@ -2,7 +2,7 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 'dh_share'
+run: 'weather_years'
 
 scenario:
   sectors: [E]  # ignore this legacy setting
@@ -10,7 +10,8 @@ scenario:
   lv: [1.0]    # allowed transmission line volume expansion, can be any float >= 1.0 (today) or "opt"
   clusters: [48] # number of nodes in Europe, any integer between 37 (1 node per country-zone) and several hundred
   opts: ['']  # only relevant for PyPSA-Eur
-  sector_opts: [Co2L0-1H-T-H-B-retro-tes-dhshare20, Co2L0-1H-T-H-B-retro-tes-dhshare40, Co2L0-1H-T-H-B-retro-tes-dhshare60, Co2L0-1H-T-H-B-retro-tes-dhshare80, Co2L0-1H-T-H-B-retro-tes-dhshare100, ]  # this is where the main scenario settings are
+  year:[2010, 2012, 2014]
+  sector_opts: [Co2L0-1H-T-H-B-retro-tes]  # this is where the main scenario settings are
   # to really understand the options here, look in scripts/prepare_sector_network.py
   # Co2Lx specifies the CO2 target in x% of the 1990 values; default will give default (5%);
   # Co2L0p25 will give 25% CO2 emissions; Co2Lm0p05 will give 5% negative emissions
