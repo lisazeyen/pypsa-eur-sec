@@ -83,8 +83,8 @@ def attach_wind_costs(n, costs):
     """update pypsa eur costs for offwind """
     for tech in ["onwind"]:  # ,"offwind-ac", "offwind-dc"]:
 
-        with xr.open_dataset('../pypsa-eur/resources/profile_{}.nc'
-                             .format(tech)) as ds:
+        with xr.open_dataset('../pypsa-eur/resources/{}/profile_{}.nc'
+                             .format(snakemake.wildcards["year"], tech)) as ds:
             #            if ds.indexes['bus'].empty: continue
             suptech = tech.split('-', 2)[0]
             if suptech == 'offwind':
@@ -1671,6 +1671,7 @@ def add_heat(network):
             else:
                 print("no retrofitting data for ", ct,
                       " the country is skipped.")
+            pd.concat(res, axis=1).to_csv("resources/{}/heat_demand_nodal.csv".format(snakemake.wildcards["year"]))
 
 
 def add_biomass(network):
@@ -2149,51 +2150,53 @@ if __name__ == "__main__":
     #  Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
         from vresutils.snakemake import MockSnakemake
-        os.chdir("/home/ws/bw0928/mnt/lisa/pypsa-eur-sec-copy/scripts")
+        os.chdir("/home/ws/bw0928/mnt/lisa/pypsa-eur-sec/scripts")
         snakemake = MockSnakemake(
             wildcards=dict(
                 network='elec',
                 simpl='',
                 clusters='48',
-                lv='1',
+                lv='1.0',
                 opts='Co2L-3H',
-                sector_opts="[Co2L0p0-3h-T-H-B-I-retro-noigas-tes-dhshare80]"),
+                year='2011',
+                sector_opts="[Co2L0p0-3h-T-H-B-retro-tes]"),
             input=dict(
-                network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}.nc',
-                energy_totals_name='data/energy_totals.csv',
-                co2_totals_name='data/co2_totals.csv',
-                transport_name='data/transport_data.csv',
-                biomass_potentials='data/biomass/biomass_potentials.csv',
-                biomass_transport='data/biomass/biomass_transport_costs.csv',
-                heat_profile="data/heat_load_profile_BDEW.csv",
-                costs="data/costs/",
-                costs_old="data/costs_old.csv",
-                retro_cost_energy="resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
-                floor_area="resources/floor_area_{network}_s{simpl}_{clusters}.csv",
-                retro_tax_w="data/eu_elec_taxes_weighting.csv",
-                h2_cavern="data/hydrogen_salt_cavern_potentials.csv",
-                traffic_data="data/emobility/",
-                clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
-                industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
-                heat_demand_urban="resources/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
-                heat_demand_rural="resources/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
-                heat_demand_total="resources/heat_demand_total_{network}_s{simpl}_{clusters}.nc",
-                temp_soil_total="resources/temp_soil_total_{network}_s{simpl}_{clusters}.nc",
-                temp_soil_rural="resources/temp_soil_rural_{network}_s{simpl}_{clusters}.nc",
-                temp_soil_urban="resources/temp_soil_urban_{network}_s{simpl}_{clusters}.nc",
-                temp_air_total="resources/temp_air_total_{network}_s{simpl}_{clusters}.nc",
-                temp_air_rural="resources/temp_air_rural_{network}_s{simpl}_{clusters}.nc",
-                temp_air_urban="resources/temp_air_urban_{network}_s{simpl}_{clusters}.nc",
-                cop_soil_total="resources/cop_soil_total_{network}_s{simpl}_{clusters}.nc",
-                cop_soil_rural="resources/cop_soil_rural_{network}_s{simpl}_{clusters}.nc",
-                cop_soil_urban="resources/cop_soil_urban_{network}_s{simpl}_{clusters}.nc",
-                cop_air_total="resources/cop_air_total_{network}_s{simpl}_{clusters}.nc",
-                cop_air_rural="resources/cop_air_rural_{network}_s{simpl}_{clusters}.nc",
-                cop_air_urban="resources/cop_air_urban_{network}_s{simpl}_{clusters}.nc",
-                solar_thermal_total="resources/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
-                solar_thermal_urban="resources/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
-                solar_thermal_rural="resources/solar_thermal_rural_{network}_s{simpl}_{clusters}.nc",
-                timezone_mappings='data/timezone_mappings.csv'),
+               energy_totals_name='data/{year}/energy_totals.csv',
+        co2_totals_name='data/{year}/co2_totals.csv',
+        transport_name='data/{year}/transport_data.csv',
+        biomass_potentials='data/biomass/biomass_potentials.csv',
+        biomass_transport='data/biomass/biomass_transport_costs.csv',
+        timezone_mappings='data/timezone_mappings.csv',
+        heat_profile="data/heat_load_profile_BDEW.csv",
+        costs="data/costs/",
+        #network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
+        network='../pypsa-eur/networks/{year}/{network}_s{simpl}_{clusters}_lv{lv}_.nc',
+        costs_old="data/costs_old.csv",
+        retro_cost_energy = "resources/{year}/retro_cost_{network}_s{simpl}_{clusters}.csv",
+        floor_area = "resources/{year}/floor_area_{network}_s{simpl}_{clusters}.csv",
+        clustered_pop_layout="resources/{year}/pop_layout_{network}_s{simpl}_{clusters}.csv",
+    	traffic_data = "data/emobility/",
+    	h2_cavern = "data/hydrogen_salt_cavern_potentials.csv",
+        industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
+        heat_demand_urban="resources/{year}/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
+        heat_demand_rural="resources/{year}/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
+        heat_demand_total="resources/{year}/heat_demand_total_{network}_s{simpl}_{clusters}.nc",
+        temp_soil_total="resources/{year}/temp_soil_total_{network}_s{simpl}_{clusters}.nc",
+        temp_soil_rural="resources/{year}/temp_soil_rural_{network}_s{simpl}_{clusters}.nc",
+        temp_soil_urban="resources/{year}/temp_soil_urban_{network}_s{simpl}_{clusters}.nc",
+        temp_air_total="resources/{year}/temp_air_total_{network}_s{simpl}_{clusters}.nc",
+        temp_air_rural="resources/{year}/temp_air_rural_{network}_s{simpl}_{clusters}.nc",
+        temp_air_urban="resources/{year}/temp_air_urban_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_total="resources/{year}/cop_soil_total_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_rural="resources/{year}/cop_soil_rural_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_urban="resources/{year}/cop_soil_urban_{network}_s{simpl}_{clusters}.nc",
+        cop_air_total="resources/{year}/cop_air_total_{network}_s{simpl}_{clusters}.nc",
+        cop_air_rural="resources/{year}/cop_air_rural_{network}_s{simpl}_{clusters}.nc",
+        cop_air_urban="resources/{year}/cop_air_urban_{network}_s{simpl}_{clusters}.nc",
+        solar_thermal_total="resources/{year}/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
+        solar_thermal_urban="resources/{year}/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
+        solar_thermal_rural="resources/{year}/solar_thermal_rural_{network}_s{simpl}_{clusters}.nc"
+        ),
             output=dict(
                 network='/results/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
                 costs='/costs/assumed_costs_{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.csv'

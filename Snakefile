@@ -188,12 +188,12 @@ if config['sector'].get('retrofitting', True):
     		construction_index="data/retro/comparative_level_investment.csv",
     		average_surface="data/retro/average_surface_components.csv",
     		floor_area_missing="data/retro/floor_area_missing.csv",
-    		clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
+    		clustered_pop_layout="resources/{year}/pop_layout_{network}_s{simpl}_{clusters}.csv",
     		cost_germany="data/retro/retro_cost_germany.csv",
     		window_assumptions="data/retro/window_assumptions.csv"
 	    output:
-    		retro_cost="resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
-    		floor_area="resources/floor_area_{network}_s{simpl}_{clusters}.csv"
+    		retro_cost="resources/{year}/retro_cost_{network}_s{simpl}_{clusters}.csv",
+    		floor_area="resources/{year}/floor_area_{network}_s{simpl}_{clusters}.csv"
 	    script: "scripts/build_retro_cost_curves.py"
 
 
@@ -210,9 +210,9 @@ rule prepare_sector_network:
         #network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
         network=pypsaeur('networks/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),
 	costs_old="data/costs_old.csv",
-	retro_cost_energy = "resources/retro_cost_{network}_s{simpl}_{clusters}.csv",
-        floor_area = "resources/floor_area_{network}_s{simpl}_{clusters}.csv",
-        clustered_pop_layout="resources/pop_layout_{network}_s{simpl}_{clusters}.csv",
+	retro_cost_energy = "resources/{year}/retro_cost_{network}_s{simpl}_{clusters}.csv",
+        floor_area = "resources/{year}/floor_area_{network}_s{simpl}_{clusters}.csv",
+        clustered_pop_layout="resources/{year}/pop_layout_{network}_s{simpl}_{clusters}.csv",
 	traffic_data = "data/emobility/",
 	h2_cavern = "data/hydrogen_salt_cavern_potentials.csv",
         industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
@@ -239,7 +239,7 @@ rule prepare_sector_network:
 	# costs = config['results_dir']  +  config['run'] + '/costs/assumed_costs_{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.csv'
     threads: 1
     resources: mem=1000
-    benchmark: "benchmarks/prepare_network/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
+    benchmark: "benchmarks/prepare_network/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
     script: "scripts/prepare_sector_network.py"
 
 
@@ -276,7 +276,7 @@ rule copy_config:
         networks=expand(config['results_dir'] + config['run'] + "/{year}/prenetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
                **config['scenario'])
     output:
-        config=config['summary_dir'] + '/' + config['run'] + '/{year}/configs/config.yaml'
+        config=config['summary_dir'] + '/' + config['run'] + '/configs/config.yaml'
     threads: 1
     resources: mem_mb=1000
     script:

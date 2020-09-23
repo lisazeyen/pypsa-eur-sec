@@ -67,10 +67,10 @@ eu28_eea.remove("GB")
 eu28_eea.append("UK")
 
 #% ------------- FUNCTIONS -------------------------------------------------
-def build_eurostat(year):
+def build_eurostat(year, stats_from_year=2016):
     """Return multi-index for all countries' energy data in TWh/a."""
 
-    stats_from_year = 2016
+    # stats_from_year = 2017
 
     fns = {
         2016: "data/eurostat-energy_balances-june_2016_edition/{year}-Energy-Balances-June2016edition.xlsx",
@@ -83,10 +83,19 @@ def build_eurostat(year):
                         None,
                         skiprows=1,
                         index_col=list(range(4)))
+    dfs2 = pd.read_excel(fns[2016].format(year='2013'),
+                        None,
+                        skiprows=1,
+                        index_col=list(range(4)))
 
     # sorted_index necessary for slicing
     df = pd.concat({country_to_code[df.columns[0]]: df for ct,
                     df in dfs.items()}, sort=True).sort_index()
+    if stats_from_year==2017:
+        df2 = pd.concat({country_to_code[df.columns[0]]: df for ct,
+                        df in dfs2.items()}, sort=True).sort_index()
+
+        df = pd.concat([df, df2[df2.index.get_level_values(level=0)=="BA"]])
 
     # test
 #    codes = ["15_107064", "15_107072", "15_107076", "15_107080", "15_107086", "14_1070681", # CHP
@@ -103,6 +112,7 @@ def build_eurostat(year):
 
 
 def build_swiss(year):
+    # data for 2000, 2010-2015
 
     fn = snakemake.input.swiss
 
@@ -572,7 +582,7 @@ def build_eea_co2():
 
 def build_eurostat_co2(year=1990):
 
-    eurostat_for_co2 = build_eurostat(year)
+    eurostat_for_co2 = build_eurostat(year, stats_from_year=2017)
 
     se = pd.Series(index=eurostat_for_co2.columns, dtype=float)
 
@@ -679,29 +689,46 @@ if __name__ == "__main__":
 
     # Detect running outside of snakemake and mock snakemake for testing
     if 'snakemake' not in globals():
-        from vresutils import Dict
-        snakemake = Dict()
-        snakemake.output = Dict()
-        snakemake.output['energy_name'] = "data/energy_totals.csv"
-        snakemake.output['co2_name'] = "data/co2_totals.csv"
-        snakemake.output['transport_name'] = "data/transport_data.csv"
-
-        snakemake.input = Dict()
-        snakemake.input['nuts3_shapes'] = '../pypsa-eur/resources/nuts3_shapes.geojson'
-        snakemake.input['district_heat_share'] = 'data/district_heat_share.csv'
-        snakemake.input['idee_dir'] = 'data/jrc-idees-2015'
-        snakemake.input['eea_co2'] = "data/eea/UNFCCC_v21.csv"
-        snakemake.input['swiss'] = "data/switzerland-sfoe/switzerland-new_format.csv"
+        import os
+        os.chdir("/home/ws/bw0928/mnt/lisa/pypsa-eur-sec")
+        from vresutils.snakemake import MockSnakemake
+        import yaml
+        snakemake = MockSnakemake(
+            wildcards=dict(
+                network='elec',
+                simpl='',
+                clusters='48',
+                lv='2',
+                opts='Co2L-3H',
+                year='2015',
+                sector_opts="[Co2L0p0-3h-T-H-B-I-retro-noigas-tes]"),
+            input=dict(
+                nuts3_shapes='../pypsa-eur/resources/nuts3_shapes.geojson',
+        	    district_heat_share='data/district_heat_share.csv',
+                idee_dir='data/jrc-idees-2015',
+                eea_co2="data/eea/UNFCCC_v21.csv",
+                swiss="data/switzerland-sfoe/switzerland-new_format.csv"
+                ),
+            output=dict(
+                energy_name='data/{year}/energy_totals.csv',
+                co2_name='data/{year}/co2_totals.csv',
+                transport_name='data/{year}/transport_data.csv'
+            )
+        )
+        with open('/home/ws/bw0928/Dokumente/pypsa-eur-sec/config.yaml', encoding='utf8') as f:
+            snakemake.config = yaml.safe_load(f)
 
     nuts3 = gpd.read_file(snakemake.input.nuts3_shapes).set_index('index')
     population = nuts3['pop'].groupby(nuts3.country).sum()
 
-    year = snakemake.wildcards.year
+    year = int(snakemake.wildcards.year)
+    # data for 1990. 1995, 2000, 2005, 2010-2014
+    eurostat = build_eurostat(year, stats_from_year=2017)
 
-    eurostat = build_eurostat(year)
-
+    # data for 2000, 2010-2015
     swiss = build_swiss(year)
 
+    # data 2000-2015
     idees = build_idees(year)
 
     build_energy_totals()

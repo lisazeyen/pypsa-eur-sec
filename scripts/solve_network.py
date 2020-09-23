@@ -210,7 +210,7 @@ def solve_network(n, config=None, solver_log=None, opts=None):
 
     def run_lopf(
             n,
-            allow_warning_status=False,
+            allow_warning_status=True,
             fix_zero_lines=False,
             fix_ext_lines=False):
         free_output_series_dataframes(n)
