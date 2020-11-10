@@ -2111,7 +2111,7 @@ def add_waste_heat(network):
               district heating")
 
     # AC buses with district heating
-    urban_central = n.buses.index[n.buses.carrier == "urban central heat"]
+    urban_central = n.buses.index[n.buses.index.str.contains("urban central heat")]
     if not urban_central.empty:
         urban_central = urban_central.str[:-len(" urban central heat")]
         if "I" in opts:
