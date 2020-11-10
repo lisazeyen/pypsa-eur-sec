@@ -1333,6 +1333,20 @@ def add_heat(network):
                      nodes[name] + " " + name + " heat",
                      carrier=name + " heat")
 
+        # add nodes for space heat
+        network.madd("Bus",
+                     nodes[name] + " " + name + " space heat",
+                     carrier=name + " heat")
+        # add link heat to space heat
+        network.madd("Link",
+                     nodes[name] + " " + name,
+                     suffix=" heat to space heat",
+                     bus0=nodes[name] + " " + name + " heat",
+                     bus1=nodes[name] + " " + name + " space heat",
+                     carrier=name + " heat",
+                     p_nom_extendable=True)
+
+
         #  Add heat load
         for sector in sectors:
             if "rural" in name:
@@ -1346,11 +1360,14 @@ def add_heat(network):
                 factor = None
 
             if sector in name:
-                heat_load = heat_demand[[sector + " water",
-                                         sector + " space"]].groupby(level=1,
+                heat_load = heat_demand[[sector + " water"]].groupby(level=1,
+                                                                     axis=1).sum()[nodes[name]].multiply(factor)
+                heat_load_space = heat_demand[[sector + " space"]].groupby(level=1,
                                                                      axis=1).sum()[nodes[name]].multiply(factor)
         if name == "urban central":
-            heat_load = heat_demand.groupby(level=1, axis=1).sum()[nodes[name]].multiply(
+            heat_load = heat_demand[[sector + " water"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
+                factor * (1 + options['district_heating_loss']))
+            heat_load_space = heat_demand[[sector + " space"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
                 factor * (1 + options['district_heating_loss']))
 
         # distribute heat demand over one year
@@ -1360,12 +1377,20 @@ def add_heat(network):
             heat_load = heat_load.apply(
                 lambda x: base_load.loc[x.index], axis=1)
 
+        # hot water
         network.madd("Load",
                      nodes[name],
                      suffix=" " + name + " heat",
                      bus=nodes[name] + " " + name + " heat",
                      carrier=name + " heat",
                      p_set=heat_load)
+        # space heat
+        network.madd("Load",
+                     nodes[name],
+                     suffix=" " + name + " space heat",
+                     bus=nodes[name] + " " + name + " space heat",
+                     carrier=name + " heat",
+                     p_set=heat_load_space)
 
         # #  Add heat pumps
 
@@ -1381,7 +1406,7 @@ def add_heat(network):
                      suffix=" {} {} heat pump".format(name,
                                                       heat_pump_type),
                      bus0=nodes[name],
-                     bus1=nodes[name] + " " + name + " heat",
+                     bus1=nodes[name] + " " + name + " space heat",
                      carrier="{} {} heat pump".format(name,
                                                       heat_pump_type),
                      efficiency=efficiency,
@@ -1671,7 +1696,7 @@ def add_heat(network):
             else:
                 print("no retrofitting data for ", ct,
                       " the country is skipped.")
-            pd.concat(res, axis=1).to_csv("resources/{}/heat_demand_nodal.csv".format(snakemake.wildcards["year"]))
+            # pd.concat(res, axis=1).to_csv("resources/{}/heat_demand_nodal.csv".format(snakemake.wildcards["year"]))
 
 
 def add_biomass(network):
