@@ -2,7 +2,7 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 'weather_years'
+run: 't_sink'
 
 scenario:
   sectors: [E]  # ignore this legacy setting
@@ -10,7 +10,8 @@ scenario:
   lv: [1.0]    # allowed transmission line volume expansion, can be any float >= 1.0 (today) or "opt"
   clusters: [48] # number of nodes in Europe, any integer between 37 (1 node per country-zone) and several hundred
   opts: ['']  # only relevant for PyPSA-Eur
-  year: [2010, 2011, 2012, 2013, 2014, 2015]
+  year: [2013]
+  Tsink: [33, 35, 40, 50, 55]
   sector_opts: [Co2L0-3H-T-H-B]  # this is where the main scenario settings are
   # to really understand the options here, look in scripts/prepare_sector_network.py
   # Co2Lx specifies the CO2 target in x% of the 1990 values; default will give default (5%);
@@ -72,7 +73,7 @@ sector:
   'retrofitting_exogenous' : False # assuming an annual natural retro-rate
   'years' : 30  # number of years from today to year of optimisation
   'retro_rate' : 0.03  # rate of yearly renovation
-  'dE' : 0.4   # assumed energy reduction for a renovated building
+  'dE' : 0.59   # assumed energy reduction for a renovated building
   'retro_opt' : "once"   # cycle of retrofitting ["once", "all", "retro_steps", "EU-target"] [("once"-> buildings are renovated one time)
   'tes' : True
   'tes_tau' : 3.

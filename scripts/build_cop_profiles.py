@@ -9,7 +9,8 @@ import xarray as xr
 cop_f = {"air": lambda d_t: 6.81 - 0.121 * d_t + 0.000630 * d_t**2,
          "soil": lambda d_t: 8.77 - 0.150 * d_t + 0.000734 * d_t**2}
 
-sink_T = 55.  # Based on DTU / large area radiators
+sink_T = float(snakemake.wildcards.Tsink)
+print("sink temperature of heat pumps assumed of ", sink_T)
 
 
 for area in ["total", "urban", "rural"]:

@@ -5,6 +5,7 @@ wildcard_constraints:
     lv="[a-z0-9\.]+",
     simpl="[a-zA-Z0-9]*",
     clusters="[0-9]+m?",
+    Tsink="[0-9]+m?",
     year="[0-9]+m?",
     sectors="[+a-zA-Z0-9]+",
     opts="[-+a-zA-Z0-9]*",
@@ -17,13 +18,13 @@ subworkflow pypsaeur:
     snakefile: "../pypsa-eur/Snakefile"
     configfile: "../pypsa-eur/config.yaml"
 
-rule all:
-     input: config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/costs.pdf'
+#rule all:
+#     input: config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/costs.pdf'
 
 
 rule solve_all_elec_networks:
     input:
-        expand(config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
+        expand(config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc",
                **config['scenario'])
 
 rule test_script:
@@ -101,12 +102,12 @@ rule build_cop_profiles:
         temp_air_rural="resources/{year}/temp_air_rural_{network}_s{simpl}_{clusters}.nc",
         temp_air_urban="resources/{year}/temp_air_urban_{network}_s{simpl}_{clusters}.nc"
     output:
-        cop_soil_total="resources/{year}/cop_soil_total_{network}_s{simpl}_{clusters}.nc",
-        cop_soil_rural="resources/{year}/cop_soil_rural_{network}_s{simpl}_{clusters}.nc",
-        cop_soil_urban="resources/{year}/cop_soil_urban_{network}_s{simpl}_{clusters}.nc",
-        cop_air_total="resources/{year}/cop_air_total_{network}_s{simpl}_{clusters}.nc",
-        cop_air_rural="resources/{year}/cop_air_rural_{network}_s{simpl}_{clusters}.nc",
-        cop_air_urban="resources/{year}/cop_air_urban_{network}_s{simpl}_{clusters}.nc"
+        cop_soil_total="resources/{year}/cop_soil_total_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_rural="resources/{year}/cop_soil_rural_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_urban="resources/{year}/cop_soil_urban_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_total="resources/{year}/cop_air_total_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_rural="resources/{year}/cop_air_rural_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_urban="resources/{year}/cop_air_urban_{Tsink}_{network}_s{simpl}_{clusters}.nc"
     script: "scripts/build_cop_profiles.py"
 
 
@@ -225,35 +226,35 @@ rule prepare_sector_network:
         temp_air_total="resources/{year}/temp_air_total_{network}_s{simpl}_{clusters}.nc",
         temp_air_rural="resources/{year}/temp_air_rural_{network}_s{simpl}_{clusters}.nc",
         temp_air_urban="resources/{year}/temp_air_urban_{network}_s{simpl}_{clusters}.nc",
-        cop_soil_total="resources/{year}/cop_soil_total_{network}_s{simpl}_{clusters}.nc",
-        cop_soil_rural="resources/{year}/cop_soil_rural_{network}_s{simpl}_{clusters}.nc",
-        cop_soil_urban="resources/{year}/cop_soil_urban_{network}_s{simpl}_{clusters}.nc",
-        cop_air_total="resources/{year}/cop_air_total_{network}_s{simpl}_{clusters}.nc",
-        cop_air_rural="resources/{year}/cop_air_rural_{network}_s{simpl}_{clusters}.nc",
-        cop_air_urban="resources/{year}/cop_air_urban_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_total="resources/{year}/cop_soil_total_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_rural="resources/{year}/cop_soil_rural_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_soil_urban="resources/{year}/cop_soil_urban_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_total="resources/{year}/cop_air_total_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_rural="resources/{year}/cop_air_rural_{Tsink}_{network}_s{simpl}_{clusters}.nc",
+        cop_air_urban="resources/{year}/cop_air_urban_{Tsink}_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_total="resources/{year}/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_urban="resources/{year}/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_rural="resources/{year}/solar_thermal_rural_{network}_s{simpl}_{clusters}.nc"
     output:
-        network = config['results_dir']  +  config['run'] + '/{year}/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc' #,
+        network = config['results_dir']  +  config['run'] + '/{year}/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc' #,
 	# costs = config['results_dir']  +  config['run'] + '/costs/assumed_costs_{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.csv'
     threads: 1
     resources: mem=1000
-    benchmark: "benchmarks/prepare_network/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
+    benchmark: "benchmarks/prepare_network/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}"
     script: "scripts/prepare_sector_network.py"
 
 
 rule solve_network:
     input:
-        network=config['results_dir'] + config['run'] + "/{year}/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
+        network=config['results_dir'] + config['run'] + "/{year}/prenetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc",
         config=config['summary_dir'] + '/' + config['run'] + '/configs/config.yaml'
-    output: config['results_dir'] + config['run'] + "/{year}/postnetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc"
+    output: config['results_dir'] + config['run'] + "/{year}/postnetworks/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc"
     shadow: "shallow"
     log:
-        solver="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_solver.log",
-        python="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_python.log",
-        memory="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_memory.log"
-    benchmark: "benchmarks/solve_network/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}"
+        solver="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}_solver.log",
+        python="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}_python.log",
+        memory="logs/" + config['run'] + "/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}_memory.log"
+    benchmark: "benchmarks/solve_network/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}"
     threads: 4
     resources: mem=100000 #memory in MB; 40 GB enough for 45+B+I; 100 GB based on RESI usage for 128
     # group: "solve" # with group, threads is ignored https://bitbucket.org/snakemake/snakemake/issues/971/group-job-description-does-not-contain
@@ -261,10 +262,10 @@ rule solve_network:
 
 rule plot_network:
     input:
-        network=config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc"
+        network=config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc"
     output:
-        map=config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}-costs-all.pdf",
-	today=config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}-today.pdf"
+        map=config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}-costs-all.pdf",
+	today=config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}-today.pdf"
     threads: 2
     resources: mem_mb=10000
     script: "scripts/plot_network.py"
@@ -273,7 +274,7 @@ rule plot_network:
 
 rule copy_config:
     input:
-        networks=expand(config['results_dir'] + config['run'] + "/{year}/prenetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
+        networks=expand(config['results_dir'] + config['run'] + "/{year}/prenetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc",
                **config['scenario'])
     output:
         config=config['summary_dir'] + '/' + config['run'] + '/configs/config.yaml'
@@ -285,9 +286,9 @@ rule copy_config:
 
 rule make_summary:
     input:
-        networks=expand(config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}.nc",
+        networks=expand(config['results_dir'] + config['run'] + "/{year}/postnetworks/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}.nc",
                **config['scenario']),
-        plots=expand(config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}-costs-all.pdf",
+        plots=expand(config['results_dir'] + config['run'] + "/{year}/maps/elec_s{simpl}_{clusters}_lv{lv}_{opts}_{sector_opts}_{Tsink}-costs-all.pdf",
                **config['scenario'])
         #heat_demand_name='data/heating/daily_heat_demand.h5'
     output:
