@@ -207,6 +207,7 @@ rule prepare_sector_network:
         biomass_transport='data/biomass/biomass_transport_costs.csv',
         timezone_mappings='data/timezone_mappings.csv',
         heat_profile="data/heat_load_profile_BDEW.csv",
+        retro_cap="data/retro_generators_flexible.csv",
         costs="data/costs/",
         #network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
         network=pypsaeur('networks/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),

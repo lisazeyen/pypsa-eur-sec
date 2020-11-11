@@ -1333,18 +1333,19 @@ def add_heat(network):
                      nodes[name] + " " + name + " heat",
                      carrier=name + " heat")
 
-        # add nodes for space heat
-        network.madd("Bus",
-                     nodes[name] + " " + name + " space heat",
-                     carrier=name + " heat")
-        # add link heat to space heat
-        network.madd("Link",
-                     nodes[name] + " " + name,
-                     suffix=" heat to space heat",
-                     bus0=nodes[name] + " " + name + " heat",
-                     bus1=nodes[name] + " " + name + " space heat",
-                     carrier=name + " heat",
-                     p_nom_extendable=True)
+        # # add nodes for space heat
+        # network.madd("Bus",
+        #              nodes[name] + " " + name + " space heat",
+        #              carrier=name + " heat")
+
+        # # add link heat to space heat
+        # network.madd("Link",
+        #              nodes[name] + " " + name,
+        #              suffix=" heat to space heat",
+        #              bus0=nodes[name] + " " + name + " heat",
+        #              bus1=nodes[name] + " " + name + " space heat",
+        #              carrier=name + " heat",
+        #              p_nom_extendable=True)
 
 
         #  Add heat load
@@ -1360,12 +1361,12 @@ def add_heat(network):
                 factor = None
 
             if sector in name:
-                heat_load = heat_demand[[sector + " water"]].groupby(level=1,
+                heat_load = heat_demand[[sector + " water", sector + " space"]].groupby(level=1,
                                                                      axis=1).sum()[nodes[name]].multiply(factor)
                 heat_load_space = heat_demand[[sector + " space"]].groupby(level=1,
                                                                      axis=1).sum()[nodes[name]].multiply(factor)
         if name == "urban central":
-            heat_load = heat_demand[[sector + " water"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
+            heat_load = heat_demand[[sector + " water", sector + " space"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
                 factor * (1 + options['district_heating_loss']))
             heat_load_space = heat_demand[[sector + " space"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
                 factor * (1 + options['district_heating_loss']))
@@ -1384,13 +1385,13 @@ def add_heat(network):
                      bus=nodes[name] + " " + name + " heat",
                      carrier=name + " heat",
                      p_set=heat_load)
-        # space heat
-        network.madd("Load",
-                     nodes[name],
-                     suffix=" " + name + " space heat",
-                     bus=nodes[name] + " " + name + " space heat",
-                     carrier=name + " heat",
-                     p_set=heat_load_space)
+        # # space heat
+        # network.madd("Load",
+        #              nodes[name],
+        #              suffix=" " + name + " space heat",
+        #              bus=nodes[name] + " " + name + " space heat",
+        #              carrier=name + " heat",
+        #              p_set=heat_load_space)
 
         # #  Add heat pumps
 
@@ -1616,6 +1617,11 @@ def add_heat(network):
         w_space["tot"] = ((heat_demand_r["services space"] +
                            heat_demand_r["residential space"]) /
                            heat_demand_r.groupby(level=[1], axis=1).sum())
+        # read solved capacities from the flexible scenario
+        retro_gen = pd.read_csv(snakemake.input.retro_cap,
+                                index_col=0)
+        rename=pd.Series(data=pop_layout.index, index=retro_gen.index.str[:5].unique()).to_dict()
+        retro_gen.index = [x.replace(x[:5], rename[x[:5]])for x in retro_gen.index]
 
         network.add("Carrier", "retrofitting")
 
@@ -1628,7 +1634,7 @@ def add_heat(network):
                 square_metres = (pop_layout.loc[node].fraction
                                  * floor_area.loc[ct, "value"] * 10**6)
                 for carrier in heat_types:
-                    name = node + " " + carrier + " heat"
+                    name = node + " " + carrier + " space heat"
                     if (name in list(network.loads_t.p_set.columns)):
 
                         if "urban central" in carrier:
@@ -1654,7 +1660,7 @@ def add_heat(network):
                         # retrofitting
                         demand = (network.loads_t.p_set[name].resample(opts[1])
                                   .mean())
-                        space_heat_demand_c = demand * w_space[sec][node]
+                        space_heat_demand_c = demand #* w_space[sec][node]
                         res[node+" "+carrier+" heat"] = space_heat_demand_c
                         space_peak_c = space_heat_demand_c.max()
                         if space_peak_c == 0:
@@ -1677,21 +1683,25 @@ def add_heat(network):
                         space_pu_c = (space_pu_c.reindex(index=heat_demand.index)
                                       .fillna(method="ffill"))
                         for strength in steps:
-                            network.madd(
-                                'Generator',
-                                retro_nodes,
-                                suffix=' retrofitting ' + strength + " " + carrier,
-                                bus=node + " " + carrier + " heat",
-                                strength=' retrofitting ' + strength,
-                                type=carrier,
-                                carrier="retrofitting",
-                                p_nom_extendable=True,
-                                p_nom_max=dE_diff[strength] * space_peak_c,
-                                dE=dE_diff[strength],
-                                p_max_pu=space_pu_c,
-                                p_min_pu=space_pu_c,
-                                country=ct,
-                                capital_cost=capital_cost[strength] * options['retrofitting-cost_factor'])
+                            if node + ' retrofitting ' + strength + " " + carrier in retro_gen.index:
+                                network.madd(
+                                    'Generator',
+                                    retro_nodes,
+                                    suffix=' retrofitting ' + strength + " " + carrier,
+                                    bus=node + " " + carrier + " heat",
+                                    strength=' retrofitting ' + strength,
+                                    type=carrier,
+                                    carrier="retrofitting",
+                                    p_nom=retro_gen.loc[node + ' retrofitting ' + strength + " " + carrier, "p_nom_opt"],
+                                    p_nom_extendable=False,
+                                    # p_nom_max=dE_diff[strength] * space_peak_c,
+                                    dE=dE_diff[strength],
+                                    p_max_pu=space_pu_c,
+                                    p_min_pu=space_pu_c,
+                                    country=ct,
+                                    capital_cost=capital_cost[strength] * options['retrofitting-cost_factor'])
+                            else:
+                                print(node + ' retrofitting ' + strength + " " + carrier)
 
             else:
                 print("no retrofitting data for ", ct,
@@ -2183,7 +2193,7 @@ if __name__ == "__main__":
                 clusters='48',
                 lv='1.0',
                 opts='Co2L-3H',
-                year='2011',
+                year='2013',
                 sector_opts="[Co2L0p0-3h-T-H-B-retro-tes]"),
             input=dict(
                energy_totals_name='data/{year}/energy_totals.csv',

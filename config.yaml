@@ -2,7 +2,7 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 't_sink_split'
+run: 't_sink_fix_retro'
 
 scenario:
   sectors: [E]  # ignore this legacy setting
