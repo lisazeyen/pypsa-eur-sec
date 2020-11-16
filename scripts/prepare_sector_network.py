@@ -1407,7 +1407,7 @@ def add_heat(network):
                      suffix=" {} {} heat pump".format(name,
                                                       heat_pump_type),
                      bus0=nodes[name],
-                     bus1=nodes[name] + " " + name + " space heat",
+                     bus1=nodes[name] + " " + name + " heat",
                      carrier="{} {} heat pump".format(name,
                                                       heat_pump_type),
                      efficiency=efficiency,
@@ -1634,7 +1634,7 @@ def add_heat(network):
                 square_metres = (pop_layout.loc[node].fraction
                                  * floor_area.loc[ct, "value"] * 10**6)
                 for carrier in heat_types:
-                    name = node + " " + carrier + " space heat"
+                    name = node + " " + carrier + " heat" #+ " space heat"
                     if (name in list(network.loads_t.p_set.columns)):
 
                         if "urban central" in carrier:
@@ -1660,7 +1660,7 @@ def add_heat(network):
                         # retrofitting
                         demand = (network.loads_t.p_set[name].resample(opts[1])
                                   .mean())
-                        space_heat_demand_c = demand #* w_space[sec][node]
+                        space_heat_demand_c = demand * w_space[sec][node]
                         res[node+" "+carrier+" heat"] = space_heat_demand_c
                         space_peak_c = space_heat_demand_c.max()
                         if space_peak_c == 0:

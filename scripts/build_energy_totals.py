@@ -723,7 +723,7 @@ if __name__ == "__main__":
 
     year = int(snakemake.wildcards.year)
     # data for 1990. 1995, 2000, 2005, 2010-2014
-    eurostat = build_eurostat(year, stats_from_year=2017)
+    eurostat = build_eurostat(year, stats_from_year=2016)
 
     # data for 2000, 2010-2015
     swiss = build_swiss(year)
