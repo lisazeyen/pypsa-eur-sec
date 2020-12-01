@@ -56,8 +56,8 @@ rule build_clustered_population_layouts:
         pop_layout_total="resources/{year}/pop_layout_total.nc",
         pop_layout_urban="resources/{year}/pop_layout_urban.nc",
         pop_layout_rural="resources/{year}/pop_layout_rural.nc",
- 	#regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
-        regions_onshore=pypsaeur('resources/{year}/regions_onshore_{network}_s{simpl}_{clusters}.geojson')
+ 	regions_onshore='../pypsa-eur/resources/2013_orig/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
+        # regions_onshore=pypsaeur('resources/{year}/regions_onshore_{network}_s{simpl}_{clusters}.geojson')
     output:
         clustered_pop_layout="resources/{year}/pop_layout_{network}_s{simpl}_{clusters}.csv"
     script: "scripts/build_clustered_population_layouts.py"
@@ -69,7 +69,7 @@ rule build_heat_demands:
         pop_layout_urban="resources/{year}/pop_layout_urban.nc",
         pop_layout_rural="resources/{year}/pop_layout_rural.nc",
  	#regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
-        regions_onshore=pypsaeur("resources/{year}/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+        regions_onshore="../pypsa-eur/resources/2013_orig/regions_onshore_{network}_s{simpl}_{clusters}.geojson"
     output:
         heat_demand_urban="resources/{year}/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
         heat_demand_rural="resources/{year}/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
@@ -82,7 +82,7 @@ rule build_temperature_profiles:
         pop_layout_urban="resources/{year}/pop_layout_urban.nc",
         pop_layout_rural="resources/{year}/pop_layout_rural.nc",
  	#regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
-        regions_onshore=pypsaeur("resources/{year}/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+        regions_onshore="../pypsa-eur/resources/2013_orig/regions_onshore_{network}_s{simpl}_{clusters}.geojson"
     output:
         temp_soil_total="resources/{year}/temp_soil_total_{network}_s{simpl}_{clusters}.nc",
         temp_soil_rural="resources/{year}/temp_soil_rural_{network}_s{simpl}_{clusters}.nc",
@@ -117,7 +117,7 @@ rule build_solar_thermal_profiles:
         pop_layout_urban="resources/{year}/pop_layout_urban.nc",
         pop_layout_rural="resources/{year}/pop_layout_rural.nc",
  	#regions_onshore='../pypsa-eur/resources/2013/regions_onshore_{network}_s{simpl}_{clusters}.geojson'
-        regions_onshore=pypsaeur("resources/{year}/regions_onshore_{network}_s{simpl}_{clusters}.geojson")
+        regions_onshore="../pypsa-eur/resources/2013_orig/regions_onshore_{network}_s{simpl}_{clusters}.geojson"
     output:
         solar_thermal_total="resources/{year}/solar_thermal_total_{network}_s{simpl}_{clusters}.nc",
         solar_thermal_urban="resources/{year}/solar_thermal_urban_{network}_s{simpl}_{clusters}.nc",
@@ -128,7 +128,7 @@ rule build_solar_thermal_profiles:
 
 rule build_energy_totals:
     input:
-        nuts3_shapes=pypsaeur('resources/nuts3_shapes.geojson'),
+        nuts3_shapes='../pypsa-eur/resources/nuts3_shapes.geojson',
 	    district_heat_share='data/district_heat_share.csv',
         idee_dir='data/jrc-idees-2015',
         eea_co2="data/eea/UNFCCC_v21.csv",
@@ -209,8 +209,8 @@ rule prepare_sector_network:
         heat_profile="data/heat_load_profile_BDEW.csv",
         retro_cap="data/retro_generators_flexible.csv",
         costs="data/costs/",
-        #network='../pypsa-eur/networks/2013/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
-        network=pypsaeur('networks/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),
+        network='../pypsa-eur/networks/2013_orig/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc',
+        # network=pypsaeur('networks/{year}/{network}_s{simpl}_{clusters}_lv{lv}_{opts}.nc'),
 	costs_old="data/costs_old.csv",
 	retro_cost_energy = "resources/{year}/retro_cost_{network}_s{simpl}_{clusters}.csv",
         floor_area = "resources/{year}/floor_area_{network}_s{simpl}_{clusters}.csv",
@@ -317,10 +317,12 @@ rule make_summary:
 rule plot_summary:
     input:
         costs=config['summary_dir'] + '/' + config['run'] + '/{year}/csvs/costs.csv',
-        energy=config['summary_dir'] + '/' + config['run'] + '/{year}/csvs/energy.csv'
+        energy=config['summary_dir'] + '/' + config['run'] + '/{year}/csvs/energy.csv',
+        balances=config['summary_dir'] + '/' + config['run'] + '/{year}/csvs/supply_energy.csv'
     output:
         costs=config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/costs.pdf',
-        energy=config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/energy.pdf'
+        energy=config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/energy.pdf',
+        balances=config['summary_dir'] + '/' + config['run'] + '/{year}/graphs/balances-energy.pdf'
     threads: 2
     resources: mem_mb=10000
     script:

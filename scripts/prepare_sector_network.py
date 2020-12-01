@@ -1366,7 +1366,7 @@ def add_heat(network):
                 heat_load_space = heat_demand[[sector + " space"]].groupby(level=1,
                                                                      axis=1).sum()[nodes[name]].multiply(factor)
         if name == "urban central":
-            heat_load = heat_demand[[sector + " water", sector + " space"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
+            heat_load = heat_demand.groupby(level=1, axis=1).sum()[nodes[name]].multiply(
                 factor * (1 + options['district_heating_loss']))
             heat_load_space = heat_demand[[sector + " space"]].groupby(level=1, axis=1).sum()[nodes[name]].multiply(
                 factor * (1 + options['district_heating_loss']))

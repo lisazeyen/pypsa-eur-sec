@@ -256,7 +256,7 @@ if __name__ == "__main__":
         snakemake.input["balances"] = snakemake.config['summary_dir'] + '/test/csvs/supply_energy.csv'
         snakemake.output["balances"] = snakemake.config['summary_dir'] + '/test/graphs/balances-energy.csv'
 
-    n_header = 5
+    n_header = 3
     plot_costs()
 
     plot_energy()
