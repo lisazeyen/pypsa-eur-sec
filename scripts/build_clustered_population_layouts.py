@@ -4,6 +4,17 @@ import xarray as xr
 import pandas as pd
 import atlite
 import helper
+import logging
+logger = logging.getLogger(__name__)
+
+def clean_invalid_geometries(geometries):
+    """Fix self-touching or self-crossing polygons; these seem to appear
+    due to numerical problems from writing and reading, since the geometries
+    are valid before being written in pypsa-eur/scripts/cluster_network.py"""
+    for i,p in geometries.items():
+        if not p.is_valid:
+            logger.warning(f'Clustered region {i} had an invalid geometry, fixing using zero buffer.')
+            geometries[i] = p.buffer(0)
 
 # adjust snapshots to energy year
 snakemake.config["snapshots"] = {'start': '{}-01-01'.format(snakemake.wildcards["year"]),
@@ -21,7 +32,7 @@ clustered_busregions_as_geopd = gpd.read_file(
 
 clustered_busregions = pd.Series(clustered_busregions_as_geopd.geometry, index=clustered_busregions_as_geopd.index)
 
-helper.clean_invalid_geometries(clustered_busregions)
+clean_invalid_geometries(clustered_busregions)
 
 I = cutout.indicatormatrix(clustered_busregions)
 

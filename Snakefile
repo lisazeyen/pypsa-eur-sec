@@ -217,7 +217,7 @@ rule prepare_sector_network:
         clustered_pop_layout="resources/{year}/pop_layout_{network}_s{simpl}_{clusters}.csv",
 	traffic_data = "data/emobility/",
 	h2_cavern = "data/hydrogen_salt_cavern_potentials.csv",
-        industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
+        #industrial_demand="resources/industrial_demand_{network}_s{simpl}_{clusters}.csv",
         heat_demand_urban="resources/{year}/heat_demand_urban_{network}_s{simpl}_{clusters}.nc",
         heat_demand_rural="resources/{year}/heat_demand_rural_{network}_s{simpl}_{clusters}.nc",
         heat_demand_total="resources/{year}/heat_demand_total_{network}_s{simpl}_{clusters}.nc",

@@ -2,7 +2,7 @@ logging_level: INFO
 
 results_dir: 'results/'
 summary_dir: results
-run: 't_sink_fix_retro'
+run: 't_sink_fix_retro_new'
 
 scenario:
   sectors: [E]  # ignore this legacy setting
@@ -12,7 +12,7 @@ scenario:
   opts: ['']  # only relevant for PyPSA-Eur
   year: [2013]
   Tsink: [33, 35, 40, 50, 55]
-  sector_opts: [Co2L0-1H-T-H-B, Co2L0-1H-T-H-B-tes]  # this is where the main scenario settings are
+  sector_opts: [Co2L0-1H-T-H-B-retro-tes]  # this is where the main scenario settings are
   # to really understand the options here, look in scripts/prepare_sector_network.py
   # Co2Lx specifies the CO2 target in x% of the 1990 values; default will give default (5%);
   # Co2L0p25 will give 25% CO2 emissions; Co2Lm0p05 will give 5% negative emissions

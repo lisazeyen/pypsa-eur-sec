@@ -1,0 +1,35 @@
+
+
+http://www.bfe.admin.ch/themen/00526/00541/00542/02167/index.html?lang=en&dossier_id=02169
+
+Analyse des schweizerischen Energieverbrauchs 2000 - 2015 nach Verwendungszwecken (pdf, 1.5 MB)
+
+
+Verwendungszwecke2015_Bericht_20161027.pdf
+
+
+
+Institution: BFE
+Author: Prognos AG, Basel, Infras AG, Bern, TEP Energy GmbH
+Editor:
+Publication date: 01.10.2016
+
+Taken from Tabelle 4-1 Private Haushalte
+
+Tabelle 4-2 Private Haushalte: Stromverbrauch
+
+Tabelle 4-10 Dienstleistungssektor und Landwirtschaft
+
+Tabelle 4-12  Dienstleistungssektor und Landwirtschaft Elek
+
+Tabelle 4-19 Verkehr
+
+Tabelle 4-21 for rail electicity
+
+Notes on CSV:
+
+Switzerland's "tertiary" includes both services and agriculture (for
+other countries we only considered services, since there was no
+space/water heating for agriculture listed).
+
+For cooking we've taken Prozesswärme for 4-10/12.
